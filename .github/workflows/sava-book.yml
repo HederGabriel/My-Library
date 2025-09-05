@@ -1,0 +1,24 @@
+name: Save Book
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [save-book]
+
+jobs:
+  save:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Salvar livro
+        run: |
+          echo "${{ github.event.client_payload.content }}" | base64 -d > ${{ github.event.client_payload.path }}
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add ${{ github.event.client_payload.path }}
+          git commit -m "Adicionando livro ${{ github.event.client_payload.title }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

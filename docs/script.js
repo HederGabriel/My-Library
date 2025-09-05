@@ -1,33 +1,36 @@
 const user = "HederGabriel";   // seu usuário GitHub
 const repo = "My-Library";     // repositório
-const branch = "main";         // branch
 const folder = "Storage";      // pasta dos livros
-const token = "SEU_GITHUB_TOKEN"; // ⚠️ coloque seu Personal Access Token com permissão de escrita
 
 let livros = [];
 
-// Salvar livro no GitHub (um JSON por livro)
+// Salvar livro no GitHub (um JSON por livro) via repository_dispatch
 async function salvarLivroNoGitHub(livro) {
-  const path = `${folder}/${livro.titulo}.json`;
-  const url = `https://api.github.com/repos/${user}/${repo}/contents/${encodeURIComponent(path)}`;
-
   const conteudo = btoa(JSON.stringify(livro, null, 2)); // JSON → Base64
+  const path = `${folder}/${livro.titulo}.json`;
 
-  const response = await fetch(url, {
-    method: "PUT",
+  // Dispara o workflow do GitHub Actions
+  const response = await fetch(`https://api.github.com/repos/${user}/${repo}/dispatches`, {
+    method: "POST",
     headers: {
-      "Authorization": `token ${token}`,
-      "Content-Type": "application/json"
+      "Accept": "application/vnd.github+json",
+      // ⚠️ Aqui você NÃO coloca o seu PAT.
+      // Use um token mínimo só para disparar o workflow (pode ser público),
+      // ou então deixe sem e faça chamada via backend.
+      "Authorization": "Bearer " + "PUBLIC_DISPATCH_TOKEN_AQUI"
     },
     body: JSON.stringify({
-      message: `Adicionando livro ${livro.titulo}`,
-      content: conteudo
+      event_type: "save-book",
+      client_payload: {
+        title: livro.titulo,
+        path: path,
+        content: conteudo
+      }
     })
   });
 
   if (!response.ok) {
-    const erro = await response.json();
-    console.error("Erro ao salvar:", erro);
+    console.error("Erro ao disparar workflow:", await response.text());
     alert("Erro ao salvar livro no GitHub");
     return;
   }
@@ -35,6 +38,7 @@ async function salvarLivroNoGitHub(livro) {
   return await response.json();
 }
 
+// Função principal de salvar
 function salvarLivro() {
   const livro = {
     id: Date.now(),
@@ -47,7 +51,6 @@ function salvarLivro() {
     status: document.getElementById("status").value,
   };
 
-  // salva no remoto (GitHub)
   salvarLivroNoGitHub(livro).then(() => {
     livros.push(livro);
     localStorage.setItem("livros", JSON.stringify(livros));
@@ -56,6 +59,7 @@ function salvarLivro() {
   });
 }
 
+// Renderizar a estante
 function renderEstante() {
   const estante = document.getElementById("estante");
   estante.innerHTML = "";
@@ -76,7 +80,7 @@ function fecharCadastro() {
   document.getElementById("modalCadastro").style.display = "none";
 }
 
-// Buscar livro pelo Google Books
+// Buscar livro no Google Books
 function buscarLivro() {
   const query = document.getElementById("searchBook").value;
   fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}`)
