@@ -1,0 +1,54 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+}
+
+header {
+  background: #333;
+  color: #fff;
+  padding: 1rem;
+  text-align: center;
+}
+
+#estante {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  justify-content: center;
+}
+
+.livro {
+  width: 40px;
+  height: 200px;
+  background: #444;
+  color: white;
+  writing-mode: vertical-rl;
+  text-align: center;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  transform: rotateY(10deg);
+  transition: transform 0.3s;
+}
+
+.livro:hover {
+  transform: rotateY(0deg) scale(1.05);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  width: 300px;
+  border-radius: 8px;
+}
