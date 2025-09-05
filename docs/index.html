@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<link>
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minha Biblioteca</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="shortcut icon" type="image/x-icon">
+  <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
 </head>
 <body>
-  <header>
+  <header>    
     <h1>📚 Minha Estante</h1>
     <input id="searchBook" type="text" placeholder="Buscar livro...">
     <button onclick="buscarLivro()">🔍 Buscar</button>
@@ -17,7 +17,6 @@
 
   <main id="estante"></main>
 
-  <!-- Modal de cadastro -->
   <div id="modalCadastro" class="modal">
     <div class="modal-content">
       <h2>Cadastro de Livro</h2>
