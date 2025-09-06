@@ -6,7 +6,8 @@ const folder = "Storage";
 let livros = [];
 
 // Detecta se está rodando local (file:// ou localhost)
-const isLocal = location.hostname === "localhost" || location.protocol === "file:";
+const isLocal = ["localhost", "127.0.0.1"].includes(location.hostname) || location.protocol === "file:";
+
 
 // Salvar livro (se local → usa Node, se remoto → só avisa)
 async function salvarLivro() {
