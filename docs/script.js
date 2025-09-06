@@ -1,45 +1,15 @@
-const user = "HederGabriel";   // seu usuário GitHub
-const repo = "My-Library";     // repositório
-const folder = "Storage";      // pasta dos livros
+const user = "HederGabriel";
+const repo = "My-Library";
+const branch = "main";
+const folder = "Storage";
 
 let livros = [];
 
-// Salvar livro no GitHub (um JSON por livro) via repository_dispatch
-async function salvarLivroNoGitHub(livro) {
-  const conteudo = btoa(JSON.stringify(livro, null, 2)); // JSON → Base64
-  const path = `${folder}/${livro.titulo}.json`;
+// Detecta se está rodando local (file:// ou localhost)
+const isLocal = location.hostname === "localhost" || location.protocol === "file:";
 
-  // Dispara o workflow do GitHub Actions
-  const response = await fetch(`https://api.github.com/repos/${user}/${repo}/dispatches`, {
-    method: "POST",
-    headers: {
-      "Accept": "application/vnd.github+json",
-      // ⚠️ Aqui você NÃO coloca o seu PAT.
-      // Use um token mínimo só para disparar o workflow (pode ser público),
-      // ou então deixe sem e faça chamada via backend.
-      "Authorization": "Bearer " + "PUBLIC_DISPATCH_TOKEN_AQUI"
-    },
-    body: JSON.stringify({
-      event_type: "save-book",
-      client_payload: {
-        title: livro.titulo,
-        path: path,
-        content: conteudo
-      }
-    })
-  });
-
-  if (!response.ok) {
-    console.error("Erro ao disparar workflow:", await response.text());
-    alert("Erro ao salvar livro no GitHub");
-    return;
-  }
-
-  return await response.json();
-}
-
-// Função principal de salvar
-function salvarLivro() {
+// Salvar livro (se local → usa Node, se remoto → só avisa)
+async function salvarLivro() {
   const livro = {
     id: Date.now(),
     titulo: document.getElementById("titulo").value.trim(),
@@ -51,15 +21,40 @@ function salvarLivro() {
     status: document.getElementById("status").value,
   };
 
-  salvarLivroNoGitHub(livro).then(() => {
-    livros.push(livro);
-    localStorage.setItem("livros", JSON.stringify(livros));
-    fecharCadastro();
-    renderEstante();
-  });
+  if (isLocal) {
+    // Se local → envia para script Node
+    await fetch("http://localhost:3000/salvar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(livro)
+    });
+  } else {
+    alert("Somente leitura no GitHub Pages. Para adicionar livros, use o notebook.");
+  }
+
+  livros.push(livro);
+  renderEstante();
+  fecharCadastro();
 }
 
-// Renderizar a estante
+// Carregar livros do repositório (sempre pelo GitHub)
+async function carregarLivros() {
+  const url = `https://api.github.com/repos/${user}/${repo}/contents/${folder}?ref=${branch}`;
+  const response = await fetch(url);
+  const files = await response.json();
+
+  livros = [];
+  for (let file of files) {
+    if (file.name.endsWith(".json")) {
+      const res = await fetch(file.download_url);
+      const livro = await res.json();
+      livros.push(livro);
+    }
+  }
+  renderEstante();
+}
+
+// Renderizar estante
 function renderEstante() {
   const estante = document.getElementById("estante");
   estante.innerHTML = "";
@@ -100,4 +95,4 @@ function buscarLivro() {
     });
 }
 
-renderEstante();
+carregarLivros();
